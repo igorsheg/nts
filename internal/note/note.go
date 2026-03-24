@@ -35,21 +35,21 @@ func (n Note) Frontmatter() string {
 		title = "Untitled"
 	}
 
-	labels := "[]"
+	tags := "[]"
 	if len(n.Labels) > 0 {
 		quoted := make([]string, len(n.Labels))
 		for i, l := range n.Labels {
-			quoted[i] = fmt.Sprintf("%q", l)
+			quoted[i] = l
 		}
-		labels = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
+		tags = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
 	}
 
 	return fmt.Sprintf(`---
 title: %s
 date: %s
-labels: %s
+tags: %s
 ---
-`, title, n.Date.Format(time.RFC3339), labels)
+`, title, n.Date.Format(time.RFC3339), tags)
 }
 
 func (n Note) Filename() string {

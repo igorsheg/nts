@@ -12,9 +12,9 @@ import (
 )
 
 type FrontmatterData struct {
-	Title  string   `yaml:"title"`
-	Date   string   `yaml:"date"`
-	Labels []string `yaml:"labels"`
+	Title string   `yaml:"title"`
+	Date  string   `yaml:"date"`
+	Tags  []string `yaml:"tags"`
 }
 
 var fmFormats = []*frontmatter.Format{
@@ -49,7 +49,7 @@ func Parse(path string) (*Note, error) {
 
 	return &Note{
 		Title:  fm.Title,
-		Labels: fm.Labels,
+		Labels: fm.Tags,
 		Date:   date,
 		Body:   strings.TrimSpace(string(body)),
 		Dir:    filepath.Dir(resolved),
