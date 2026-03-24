@@ -11,6 +11,19 @@ type Config struct {
 	Editor   string `json:"editor"`
 }
 
+func CacheDir() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".cache", "nts")
+}
+
+func MetaCachePath() string {
+	return filepath.Join(CacheDir(), "meta.json")
+}
+
+func IndexPath() string {
+	return filepath.Join(CacheDir(), "index.bleve")
+}
+
 func configDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {

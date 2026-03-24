@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/igorsheg/nts/internal/config"
@@ -44,7 +43,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	query := args[0]
 
-	notes, err := note.ParseAll(cfg.NotesDir)
+	notes, err := note.ParseAllCached(cfg.NotesDir, config.MetaCachePath())
 	if err != nil {
 		return fmt.Errorf("reading notes: %w", err)
 	}
@@ -59,15 +58,13 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	fuzzyResults := search.FuzzySearch(query, notes)
 
-	home, _ := os.UserHomeDir()
-	indexPath := filepath.Join(home, ".cache", "nts", "index.bleve")
-	ix, err := search.OpenIndex(indexPath)
+	ix, err := search.OpenIndex(config.IndexPath())
 	if err != nil {
 		return fmt.Errorf("opening search index: %w", err)
 	}
 	defer ix.Close()
 
-	if err := ix.IndexAll(notes); err != nil {
+	if _, err := ix.IndexChanged(notes); err != nil {
 		return fmt.Errorf("indexing notes: %w", err)
 	}
 

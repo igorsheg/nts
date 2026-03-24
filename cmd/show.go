@@ -80,7 +80,7 @@ func resolveNotePath(notesDir, query string) (string, error) {
 		return withExt, nil
 	}
 
-	notes, err := note.ParseAll(notesDir)
+	notes, err := note.ParseAllCached(notesDir, config.MetaCachePath())
 	if err != nil {
 		return "", fmt.Errorf("reading notes: %w", err)
 	}

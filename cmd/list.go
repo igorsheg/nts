@@ -41,7 +41,7 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	notes, err := note.ParseAll(cfg.NotesDir)
+	notes, err := note.ParseAllCached(cfg.NotesDir, config.MetaCachePath())
 	if err != nil {
 		return fmt.Errorf("reading notes: %w", err)
 	}
