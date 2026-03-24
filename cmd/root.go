@@ -32,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(showCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(editCmd)
 
 	rootCmd.Flags().StringVarP(&newTitle, "title", "t", "", "note title")
 	rootCmd.Flags().StringSliceVarP(&newLabels, "labels", "l", nil, "comma-separated labels")

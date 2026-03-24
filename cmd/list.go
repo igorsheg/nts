@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	listLabels []string
-	listLimit  int
-	listSearch string
-	listJSON   bool
+	listLabels  []string
+	listLimit   int
+	listSearch  string
+	listJSON    bool
+	listProject string
 )
 
 var listCmd = &cobra.Command{
@@ -30,6 +31,7 @@ func init() {
 	listCmd.Flags().StringSliceVarP(&listLabels, "labels", "l", nil, "filter by labels")
 	listCmd.Flags().IntVarP(&listLimit, "limit", "n", 20, "max results")
 	listCmd.Flags().StringVarP(&listSearch, "search", "S", "", "filter by search query")
+	listCmd.Flags().StringVarP(&listProject, "project", "p", "", "filter by project")
 	listCmd.Flags().BoolVar(&listJSON, "json", false, "output as JSON")
 }
 
@@ -50,6 +52,10 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	if len(listLabels) > 0 {
 		notes = filterByLabels(notes, listLabels)
+	}
+
+	if listProject != "" {
+		notes = filterByProject(notes, listProject)
 	}
 
 	if listSearch != "" {
@@ -104,6 +110,17 @@ func filterByLabels(notes []*note.Note, labels []string) []*note.Note {
 				filtered = append(filtered, n)
 				break
 			}
+		}
+	}
+	return filtered
+}
+
+func filterByProject(notes []*note.Note, project string) []*note.Note {
+	p := strings.ToLower(project)
+	var filtered []*note.Note
+	for _, n := range notes {
+		if strings.ToLower(n.Context.Project) == p {
+			filtered = append(filtered, n)
 		}
 	}
 	return filtered

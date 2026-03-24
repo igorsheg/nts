@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	searchLabels []string
-	searchLimit  int
-	searchJSON   bool
+	searchLabels  []string
+	searchLimit   int
+	searchJSON    bool
+	searchProject string
 )
 
 var searchCmd = &cobra.Command{
@@ -31,6 +32,7 @@ Uses fuzzy matching on titles and BM25 full-text search on content.`,
 func init() {
 	searchCmd.Flags().StringSliceVarP(&searchLabels, "labels", "l", nil, "filter by labels")
 	searchCmd.Flags().IntVarP(&searchLimit, "limit", "n", 10, "max results")
+	searchCmd.Flags().StringVarP(&searchProject, "project", "p", "", "filter by project")
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
 }
 
@@ -49,6 +51,10 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	if len(searchLabels) > 0 {
 		notes = filterByLabels(notes, searchLabels)
+	}
+
+	if searchProject != "" {
+		notes = filterByProject(notes, searchProject)
 	}
 
 	fuzzyResults := search.FuzzySearch(query, notes)

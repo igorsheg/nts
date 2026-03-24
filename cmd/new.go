@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	devctx "github.com/igorsheg/nts/internal/context"
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/editor"
 	"github.com/igorsheg/nts/internal/note"
@@ -67,6 +68,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 
 	n := note.New(title, parsedLabels, cfg.NotesDir)
 	n.Body = body
+	n.Context = devctx.Detect()
 
 	path, err := n.Create()
 	if err != nil {
@@ -130,20 +132,35 @@ func resolveBody() (string, error) {
 	return "", nil
 }
 
+type jsonContext struct {
+	Project   string `json:"project,omitempty"`
+	Branch    string `json:"branch,omitempty"`
+	Directory string `json:"directory,omitempty"`
+}
+
 type jsonNote struct {
-	Title  string   `json:"title"`
-	Date   string   `json:"date"`
-	Labels []string `json:"labels"`
-	Path   string   `json:"path"`
-	Body   string   `json:"body,omitempty"`
+	Title   string       `json:"title"`
+	Date    string       `json:"date"`
+	Labels  []string     `json:"labels"`
+	Path    string       `json:"path"`
+	Body    string       `json:"body,omitempty"`
+	Context *jsonContext  `json:"context,omitempty"`
 }
 
 func noteToJSON(n *note.Note) jsonNote {
-	return jsonNote{
+	j := jsonNote{
 		Title:  n.Title,
 		Date:   n.Date.Format("2006-01-02T15:04:05Z07:00"),
 		Labels: n.Labels,
 		Path:   n.Path,
 		Body:   n.Body,
 	}
+	if !n.Context.IsEmpty() {
+		j.Context = &jsonContext{
+			Project:   n.Context.Project,
+			Branch:    n.Context.Branch,
+			Directory: n.Context.Directory,
+		}
+	}
+	return j
 }

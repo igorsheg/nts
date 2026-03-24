@@ -8,13 +8,21 @@ import (
 	"time"
 
 	"github.com/adrg/frontmatter"
+	devctx "github.com/igorsheg/nts/internal/context"
 	"gopkg.in/yaml.v2"
 )
 
+type FrontmatterContext struct {
+	Project   string `yaml:"project"`
+	Branch    string `yaml:"branch"`
+	Directory string `yaml:"directory"`
+}
+
 type FrontmatterData struct {
-	Title string   `yaml:"title"`
-	Date  string   `yaml:"date"`
-	Tags  []string `yaml:"tags"`
+	Title   string             `yaml:"title"`
+	Date    string             `yaml:"date"`
+	Tags    []string           `yaml:"tags"`
+	Context FrontmatterContext `yaml:"context"`
 }
 
 var fmFormats = []*frontmatter.Format{
@@ -54,6 +62,11 @@ func Parse(path string) (*Note, error) {
 		Body:   strings.TrimSpace(string(body)),
 		Dir:    filepath.Dir(resolved),
 		Path:   resolved,
+		Context: devctx.Context{
+			Project:   fm.Context.Project,
+			Branch:    fm.Context.Branch,
+			Directory: fm.Context.Directory,
+		},
 	}, nil
 }
 

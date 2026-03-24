@@ -7,15 +7,18 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	devctx "github.com/igorsheg/nts/internal/context"
 )
 
 type Note struct {
-	Title  string
-	Labels []string
-	Date   time.Time
-	Body   string
-	Dir    string
-	Path   string
+	Title   string
+	Labels  []string
+	Date    time.Time
+	Body    string
+	Dir     string
+	Path    string
+	Context devctx.Context
 }
 
 func New(title string, labels []string, dir string) Note {
@@ -44,12 +47,26 @@ func (n Note) Frontmatter() string {
 		tags = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
 	}
 
+	ctx := ""
+	if !n.Context.IsEmpty() {
+		ctx = "context:\n"
+		if n.Context.Project != "" {
+			ctx += fmt.Sprintf("  project: %s\n", n.Context.Project)
+		}
+		if n.Context.Branch != "" {
+			ctx += fmt.Sprintf("  branch: %s\n", n.Context.Branch)
+		}
+		if n.Context.Directory != "" {
+			ctx += fmt.Sprintf("  directory: %s\n", n.Context.Directory)
+		}
+	}
+
 	return fmt.Sprintf(`---
 title: %q
 date: %s
 tags: %s
----
-`, title, n.Date.Format(time.RFC3339), tags)
+%s---
+`, title, n.Date.Format(time.RFC3339), tags, ctx)
 }
 
 func (n Note) Filename() string {
