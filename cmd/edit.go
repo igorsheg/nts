@@ -21,7 +21,7 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	path, err := resolveNotePath(cfg.NotesDir, args[0])
+	path, err := resolveNotePathStrict(cfg.NotesDir, args[0])
 	if err != nil {
 		return err
 	}

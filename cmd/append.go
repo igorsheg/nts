@@ -39,7 +39,7 @@ func runAppend(cmd *cobra.Command, args []string) error {
 	}
 
 	query := args[0]
-	path, err := resolveNotePath(cfg.NotesDir, query)
+	path, err := resolveNotePathStrict(cfg.NotesDir, query)
 	if err != nil {
 		return err
 	}
