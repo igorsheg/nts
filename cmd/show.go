@@ -37,7 +37,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	query := args[0]
-	path, err := resolveNotePath(cfg.NotesDir, query)
+	path, err := resolveNotePathStrict(cfg.NotesDir, query)
 	if err != nil {
 		return err
 	}
@@ -67,24 +67,6 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Print(string(data))
 	return nil
-}
-
-func resolveNotePath(notesDir, query string) (string, error) {
-	if path, ok := resolveExact(notesDir, query); ok {
-		return path, nil
-	}
-
-	notes, err := note.ParseAllCached(notesDir, config.MetaCachePath())
-	if err != nil {
-		return "", fmt.Errorf("reading notes: %w", err)
-	}
-
-	results := search.FuzzySearch(query, notes)
-	if len(results) > 0 {
-		return results[0].Note.Path, nil
-	}
-
-	return "", fmt.Errorf("note not found: %s", query)
 }
 
 func resolveNotePathStrict(notesDir, query string) (string, error) {
