@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
 	"github.com/igorsheg/nts/internal/search"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 var (
@@ -27,7 +29,7 @@ var showCmd = &cobra.Command{
 
 func init() {
 	showCmd.Flags().BoolVar(&showJSON, "json", false, "output as JSON")
-	showCmd.Flags().BoolVar(&showRaw, "raw", false, "body only, no frontmatter")
+	showCmd.Flags().BoolVar(&showRaw, "raw", false, "raw markdown, no rendering")
 }
 
 func runShow(cmd *cobra.Command, args []string) error {
@@ -54,18 +56,65 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	if showRaw {
-		fmt.Print(n.Body)
-		if n.Body != "" && !strings.HasSuffix(n.Body, "\n") {
-			fmt.Println()
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("reading note: %w", err)
 		}
+		fmt.Print(string(data))
 		return nil
 	}
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("reading note: %w", err)
+	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
+	if !isTTY {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("reading note: %w", err)
+		}
+		fmt.Print(string(data))
+		return nil
 	}
-	fmt.Print(string(data))
+
+	return renderPretty(n)
+}
+
+func renderPretty(n *note.Note) error {
+	var header strings.Builder
+	header.WriteString(fmt.Sprintf("# %s\n", n.Title))
+	header.WriteString(fmt.Sprintf("*%s*", n.Date.Format("2006-01-02 15:04")))
+	if len(n.Labels) > 0 {
+		header.WriteString(fmt.Sprintf("  `%s`", strings.Join(n.Labels, "` `")))
+	}
+	if n.Context.Project != "" {
+		header.WriteString(fmt.Sprintf("  📂 %s", n.Context.Project))
+		if n.Context.Branch != "" {
+			header.WriteString(fmt.Sprintf("@%s", n.Context.Branch))
+		}
+	}
+	header.WriteString("\n\n---\n\n")
+
+	content := header.String() + n.Body
+
+	width := 80
+	if w, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil && w > 0 {
+		width = w
+	}
+
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(width),
+	)
+	if err != nil {
+		fmt.Print(content)
+		return nil
+	}
+
+	out, err := renderer.Render(content)
+	if err != nil {
+		fmt.Print(content)
+		return nil
+	}
+
+	fmt.Print(out)
 	return nil
 }
 
