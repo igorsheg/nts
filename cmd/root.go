@@ -1,61 +1,41 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/igorsheg/nts/internal/config"
-	"github.com/igorsheg/nts/internal/editor"
-	"github.com/igorsheg/nts/internal/note"
 	"github.com/spf13/cobra"
 )
-
-var tags []string
 
 var rootCmd = &cobra.Command{
 	Use:   "nts [title]",
 	Short: "Note to self — quick markdown notes from your terminal",
-	Long:  `nts creates a markdown note with frontmatter and opens it in your editor.`,
-	Args:  cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
-		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
-		}
+	Long: `nts creates markdown notes with frontmatter and opens them in your editor.
 
-		var title string
-		if len(args) > 0 {
-			title = args[0]
-		}
-
-		var parsedTags []string
-		for _, t := range tags {
-			for _, s := range strings.Split(t, ",") {
-				s = strings.TrimSpace(s)
-				if s != "" {
-					parsedTags = append(parsedTags, s)
-				}
-			}
-		}
-
-		n := note.New(title, parsedTags, cfg.NotesDir)
-		path, err := n.Create()
-		if err != nil {
-			return err
-		}
-
-		editorBin := cfg.ResolveEditor()
-		if err := editor.Open(editorBin, path); err != nil {
-			return err
-		}
-
-		fmt.Printf("saved: %s\n", path)
-		return nil
-	},
+Examples:
+  nts                              Create a date-named note
+  nts "Meeting with Lars"          Create a titled note
+  nts new -t "standup" -b "text"   Create without opening editor
+  nts list                         List all notes
+  nts search "auth flow"           Search notes
+  nts show meeting-with-lars       Show a note`,
+	Args:                  cobra.MaximumNArgs(1),
+	DisableFlagParsing:    false,
+	RunE:                  runNew,
+	SilenceUsage:          true,
+	SilenceErrors:         true,
 }
 
 func init() {
-	rootCmd.Flags().StringSliceVarP(&tags, "tags", "t", nil, "comma-separated tags")
+	rootCmd.AddCommand(newCmd)
+	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(showCmd)
+	rootCmd.AddCommand(searchCmd)
+	rootCmd.AddCommand(configCmd)
+
+	rootCmd.Flags().StringVarP(&newTitle, "title", "t", "", "note title")
+	rootCmd.Flags().StringSliceVarP(&newLabels, "labels", "l", nil, "comma-separated labels")
+	rootCmd.Flags().StringVarP(&newBody, "body", "b", "", "body text (skips editor)")
+	rootCmd.Flags().StringVarP(&newBodyFile, "body-file", "F", "", "read body from file (- for stdin)")
+	rootCmd.Flags().BoolVarP(&newEditor, "editor", "e", false, "force editor even with --body")
+	rootCmd.Flags().BoolVar(&newJSON, "json", false, "output created note as JSON")
 }
 
 func Execute() error {

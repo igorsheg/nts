@@ -10,19 +10,23 @@ import (
 )
 
 type Note struct {
-	Title string
-	Tags  []string
-	Date  time.Time
-	Dir   string
+	Title  string
+	Labels []string
+	Date   time.Time
+	Body   string
+	Dir    string
+	Path   string
 }
 
-func New(title string, tags []string, dir string) Note {
-	return Note{
-		Title: title,
-		Tags:  tags,
-		Date:  time.Now(),
-		Dir:   dir,
+func New(title string, labels []string, dir string) Note {
+	n := Note{
+		Title:  title,
+		Labels: labels,
+		Date:   time.Now(),
+		Dir:    dir,
 	}
+	n.Path = filepath.Join(n.Dir, n.Filename())
+	return n
 }
 
 func (n Note) Frontmatter() string {
@@ -31,22 +35,21 @@ func (n Note) Frontmatter() string {
 		title = "Untitled"
 	}
 
-	tags := "[]"
-	if len(n.Tags) > 0 {
-		quoted := make([]string, len(n.Tags))
-		for i, t := range n.Tags {
-			quoted[i] = fmt.Sprintf("%q", t)
+	labels := "[]"
+	if len(n.Labels) > 0 {
+		quoted := make([]string, len(n.Labels))
+		for i, l := range n.Labels {
+			quoted[i] = fmt.Sprintf("%q", l)
 		}
-		tags = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
+		labels = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
 	}
 
 	return fmt.Sprintf(`---
 title: %s
 date: %s
-tags: %s
+labels: %s
 ---
-
-`, title, n.Date.Format(time.RFC3339), tags)
+`, title, n.Date.Format(time.RFC3339), labels)
 }
 
 func (n Note) Filename() string {
@@ -56,19 +59,16 @@ func (n Note) Filename() string {
 	return fmt.Sprintf("nts-%s.md", n.Date.Format("2006-01-02"))
 }
 
-func (n Note) Path() string {
-	return filepath.Join(n.Dir, n.Filename())
-}
-
 func (n Note) Create() (string, error) {
 	if err := os.MkdirAll(n.Dir, 0o755); err != nil {
 		return "", fmt.Errorf("creating notes directory: %w", err)
 	}
 
-	path := n.Path()
-	path = dedup(path)
+	path := dedup(n.Path)
 
-	if err := os.WriteFile(path, []byte(n.Frontmatter()), 0o644); err != nil {
+	content := n.Frontmatter() + "\n" + n.Body
+
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		return "", fmt.Errorf("writing note: %w", err)
 	}
 
