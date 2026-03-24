@@ -124,16 +124,16 @@ func mergeResults(fuzzyResults, bleveResults []*search.Result, notes []*note.Not
 		seen[r.Note.Path] = r
 	}
 
+	notesByPath := make(map[string]*note.Note)
+	for _, n := range notes {
+		notesByPath[n.Path] = n
+	}
+
 	for _, r := range bleveResults {
 		if existing, ok := seen[r.Note.Path]; ok {
 			existing.Score += r.Score
-		} else {
-			for _, n := range notes {
-				if n.Path == r.Note.Path {
-					r.Note = n
-					break
-				}
-			}
+		} else if n, ok := notesByPath[r.Note.Path]; ok {
+			r.Note = n
 			seen[r.Note.Path] = r
 		}
 	}

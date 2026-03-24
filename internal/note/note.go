@@ -45,7 +45,7 @@ func (n Note) Frontmatter() string {
 	}
 
 	return fmt.Sprintf(`---
-title: %s
+title: %q
 date: %s
 tags: %s
 ---
