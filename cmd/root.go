@@ -4,7 +4,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Version = "dev"
+
 var rootCmd = &cobra.Command{
+	Version: Version,
 	Use:   "nts [title]",
 	Short: "Note to self — quick markdown notes from your terminal",
 	Long: `nts creates markdown notes with frontmatter and opens them in your editor.
