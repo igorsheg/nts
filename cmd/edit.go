@@ -33,6 +33,12 @@ func runEdit(cmd *cobra.Command, args []string) error {
 
 	var path string
 
+	if !ui.IsTTY() {
+		if len(args) == 0 {
+			return fmt.Errorf("query required in non-interactive mode: nts edit <slug>")
+		}
+	}
+
 	if len(args) > 0 {
 		path, err = resolve.Strict(cfg.NotesDir, args[0], config.MetaCachePath())
 		if err != nil {
@@ -60,6 +66,10 @@ func runEdit(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 		path = result.Path
+	}
+
+	if !ui.IsTTY() {
+		return fmt.Errorf("cannot open editor in non-interactive mode")
 	}
 
 	if err := editor.Open(cfg.ResolveEditor(), path); err != nil {

@@ -79,6 +79,9 @@ func runNew(cmd *cobra.Command, args []string) error {
 
 	needsEditor := body == "" || newEditor
 	if needsEditor {
+		if !ui.IsTTY() {
+			return fmt.Errorf("no body provided — use -b or -F in non-interactive mode")
+		}
 		editorBin := cfg.ResolveEditor()
 		if err := editor.Open(editorBin, path); err != nil {
 			return err
