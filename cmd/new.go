@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/igorsheg/nts/internal/config"
@@ -94,7 +95,12 @@ func runNew(cmd *cobra.Command, args []string) error {
 		return enc.Encode(ui.NoteToJSON(parsed))
 	}
 
+	slug := filepath.Base(path)
+	slug = strings.TrimSuffix(slug, ".md")
 	fmt.Printf("saved: %s\n", path)
+	if hint := ui.Hint("  show: nts show " + slug + "\n  edit: nts edit " + slug); hint != "" {
+		fmt.Println(hint)
+	}
 	return nil
 }
 

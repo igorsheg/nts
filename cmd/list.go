@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
@@ -83,16 +82,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, n := range notes {
-		date := n.Date.Format("2006-01-02")
-		labels := ""
-		if len(n.Labels) > 0 {
-			labels = " [" + strings.Join(n.Labels, ", ") + "]"
-		}
-		title := n.Title
-		if title == "" {
-			title = "(untitled)"
-		}
-		fmt.Printf("%s  %s%s\n", date, title, labels)
+		fmt.Println(ui.FormatNoteRow(n))
 	}
 
 	return nil

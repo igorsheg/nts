@@ -4,18 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"sort"
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/editor"
+	"github.com/igorsheg/nts/internal/note"
 	"github.com/igorsheg/nts/internal/resolve"
+	"github.com/igorsheg/nts/internal/ui"
 	"github.com/spf13/cobra"
 )
 
 var editCmd = &cobra.Command{
-	Use:   "edit <query>",
+	Use:   "edit [query]",
 	Short: "Edit an existing note",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runEdit,
+	Long: `Edit an existing note in your editor.
+
+With a query, resolves the note by slug or fuzzy match.
+Without a query, opens an interactive picker.`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runEdit,
 }
 
 func runEdit(cmd *cobra.Command, args []string) error {
@@ -24,9 +31,35 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	path, err := resolve.Strict(cfg.NotesDir, args[0], config.MetaCachePath())
-	if err != nil {
-		return err
+	var path string
+
+	if len(args) > 0 {
+		path, err = resolve.Strict(cfg.NotesDir, args[0], config.MetaCachePath())
+		if err != nil {
+			return err
+		}
+	} else {
+		notes, err := note.ParseAllCached(cfg.NotesDir, config.MetaCachePath())
+		if err != nil {
+			return fmt.Errorf("reading notes: %w", err)
+		}
+		if len(notes) == 0 {
+			fmt.Println("no notes yet — create one with: nts \"My first note\"")
+			return nil
+		}
+
+		sort.Slice(notes, func(i, j int) bool {
+			return notes[i].Date.After(notes[j].Date)
+		})
+
+		result, err := ui.RunPicker(notes)
+		if err != nil {
+			return fmt.Errorf("picker: %w", err)
+		}
+		if result.Canceled {
+			return nil
+		}
+		path = result.Path
 	}
 
 	if err := editor.Open(cfg.ResolveEditor(), path); err != nil {

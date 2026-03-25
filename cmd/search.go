@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
@@ -94,20 +93,14 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	if len(merged) == 0 {
 		fmt.Println("no results")
+		if hint := ui.Hint("try broader terms, or create: nts \"" + query + "\""); hint != "" {
+			fmt.Println(hint)
+		}
 		return nil
 	}
 
 	for _, r := range merged {
-		title := r.Note.Title
-		if title == "" {
-			title = "(untitled)"
-		}
-		date := r.Note.Date.Format("2006-01-02")
-		labels := ""
-		if len(r.Note.Labels) > 0 {
-			labels = " [" + strings.Join(r.Note.Labels, ", ") + "]"
-		}
-		fmt.Printf("%d\t%s  %s%s\n", r.Score, date, title, labels)
+		fmt.Println(ui.FormatSearchRow(r.Note, r.Score))
 	}
 
 	return nil
