@@ -1,6 +1,10 @@
-# nts
+```
+┌┐┌┌┬┐┌─┐
+│││ │ └─┐   note to self
+┘└┘ ┴ └─┘
+```
 
-Note to self. Quick markdown notes from your terminal.
+Quick markdown notes from your terminal.
 
 ```
 nts "OAuth tokens expire after 1hr not 2hr"
