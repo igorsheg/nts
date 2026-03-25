@@ -13,9 +13,13 @@ import (
 )
 
 type FrontmatterContext struct {
-	Project   string `yaml:"project"`
-	Branch    string `yaml:"branch"`
-	Directory string `yaml:"directory"`
+	Project string   `yaml:"project"`
+	Branch  string   `yaml:"branch"`
+	Issue   string   `yaml:"issue"`
+	RepoDir string   `yaml:"repo_dir"`
+	Commit  string   `yaml:"commit"`
+	Dirty   *bool    `yaml:"dirty"`
+	Files   []string `yaml:"files"`
 }
 
 type FrontmatterData struct {
@@ -63,9 +67,13 @@ func Parse(path string) (*Note, error) {
 		Dir:    filepath.Dir(resolved),
 		Path:   resolved,
 		Context: devctx.Context{
-			Project:   fm.Context.Project,
-			Branch:    fm.Context.Branch,
-			Directory: fm.Context.Directory,
+			Project: fm.Context.Project,
+			Branch:  fm.Context.Branch,
+			Issue:   fm.Context.Issue,
+			RepoDir: fm.Context.RepoDir,
+			Commit:  fm.Context.Commit,
+			Dirty:   fm.Context.Dirty,
+			Files:   fm.Context.Files,
 		},
 	}, nil
 }

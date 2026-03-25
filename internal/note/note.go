@@ -56,8 +56,23 @@ func (n Note) Frontmatter() string {
 		if n.Context.Branch != "" {
 			ctx += fmt.Sprintf("  branch: %s\n", n.Context.Branch)
 		}
-		if n.Context.Directory != "" {
-			ctx += fmt.Sprintf("  directory: %s\n", n.Context.Directory)
+		if n.Context.Issue != "" {
+			ctx += fmt.Sprintf("  issue: %s\n", n.Context.Issue)
+		}
+		if n.Context.RepoDir != "" {
+			ctx += fmt.Sprintf("  repo_dir: %s\n", n.Context.RepoDir)
+		}
+		if n.Context.Commit != "" {
+			ctx += fmt.Sprintf("  commit: %s\n", n.Context.Commit)
+		}
+		if n.Context.Dirty != nil {
+			ctx += fmt.Sprintf("  dirty: %t\n", *n.Context.Dirty)
+		}
+		if len(n.Context.Files) > 0 {
+			ctx += "  files:\n"
+			for _, f := range n.Context.Files {
+				ctx += fmt.Sprintf("    - %s\n", f)
+			}
 		}
 	}
 

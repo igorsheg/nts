@@ -133,9 +133,13 @@ func resolveBody() (string, error) {
 }
 
 type jsonContext struct {
-	Project   string `json:"project,omitempty"`
-	Branch    string `json:"branch,omitempty"`
-	Directory string `json:"directory,omitempty"`
+	Project string   `json:"project,omitempty"`
+	Branch  string   `json:"branch,omitempty"`
+	Issue   string   `json:"issue,omitempty"`
+	RepoDir string   `json:"repo_dir,omitempty"`
+	Commit  string   `json:"commit,omitempty"`
+	Dirty   *bool    `json:"dirty,omitempty"`
+	Files   []string `json:"files,omitempty"`
 }
 
 type jsonNote struct {
@@ -157,9 +161,13 @@ func noteToJSON(n *note.Note) jsonNote {
 	}
 	if !n.Context.IsEmpty() {
 		j.Context = &jsonContext{
-			Project:   n.Context.Project,
-			Branch:    n.Context.Branch,
-			Directory: n.Context.Directory,
+			Project: n.Context.Project,
+			Branch:  n.Context.Branch,
+			Issue:   n.Context.Issue,
+			RepoDir: n.Context.RepoDir,
+			Commit:  n.Context.Commit,
+			Dirty:   n.Context.Dirty,
+			Files:   n.Context.Files,
 		}
 	}
 	return j
