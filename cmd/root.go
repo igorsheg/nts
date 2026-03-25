@@ -13,15 +13,18 @@ var rootCmd = &cobra.Command{
 	Long: `nts creates markdown notes with frontmatter and opens them in your editor.
 
 Examples:
-  nts                              Create a date-named note
   nts "Meeting with Lars"          Create a titled note
   nts new -t "standup" -b "text"   Create without opening editor
   nts list                         List all notes
   nts search "auth flow"           Search notes
   nts show meeting-with-lars       Show a note`,
-	Args:                  cobra.MaximumNArgs(1),
-	DisableFlagParsing:    false,
-	RunE:                  runNew,
+	Args: cobra.ArbitraryArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return cmd.Help()
+		}
+		return runNew(cmd, args)
+	},
 	SilenceUsage:          true,
 	SilenceErrors:         true,
 }
