@@ -18,7 +18,7 @@ type PickerResult struct {
 
 func RunPicker(notes []*note.Note) (PickerResult, error) {
 	m := newPickerModel(notes)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m)
 	final, err := p.Run()
 	if err != nil {
 		return PickerResult{}, fmt.Errorf("running picker: %w", err)
