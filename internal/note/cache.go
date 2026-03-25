@@ -55,6 +55,10 @@ func (c *Cache) Save() error {
 }
 
 func ParseAllCached(dir string, cachePath string) ([]*Note, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return nil, nil
+	}
+
 	cache := LoadCache(cachePath)
 
 	var mdPaths []string

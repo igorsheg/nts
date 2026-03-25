@@ -77,7 +77,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(notes) == 0 {
-		fmt.Println("no notes found")
+		fmt.Println("no notes yet — create one with: nts \"My first note\"")
 		return nil
 	}
 
