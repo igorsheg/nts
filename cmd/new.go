@@ -7,10 +7,11 @@ import (
 	"os"
 	"strings"
 
-	devctx "github.com/igorsheg/nts/internal/context"
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/editor"
+	"github.com/igorsheg/nts/internal/gitctx"
 	"github.com/igorsheg/nts/internal/note"
+	"github.com/igorsheg/nts/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -68,7 +69,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 
 	n := note.New(title, parsedLabels, cfg.NotesDir)
 	n.Body = body
-	n.Context = devctx.Detect()
+	n.Context = gitctx.Detect()
 
 	path, err := n.Create()
 	if err != nil {
@@ -90,7 +91,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 		}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		return enc.Encode(noteToJSON(parsed))
+		return enc.Encode(ui.NoteToJSON(parsed))
 	}
 
 	fmt.Printf("saved: %s\n", path)
@@ -109,7 +110,7 @@ func resolveBody() (string, error) {
 		} else {
 			f, err := os.Open(newBodyFile)
 			if err != nil {
-				return "", fmt.Errorf("opening body file: %w", err)
+				return "", fmt.Errorf("file not found: %s", newBodyFile)
 			}
 			defer f.Close()
 			r = f
@@ -130,45 +131,4 @@ func resolveBody() (string, error) {
 	}
 
 	return "", nil
-}
-
-type jsonContext struct {
-	Project string   `json:"project,omitempty"`
-	Branch  string   `json:"branch,omitempty"`
-	Issue   string   `json:"issue,omitempty"`
-	RepoDir string   `json:"repo_dir,omitempty"`
-	Commit  string   `json:"commit,omitempty"`
-	Dirty   *bool    `json:"dirty,omitempty"`
-	Files   []string `json:"files,omitempty"`
-}
-
-type jsonNote struct {
-	Title   string       `json:"title"`
-	Date    string       `json:"date"`
-	Labels  []string     `json:"labels"`
-	Path    string       `json:"path"`
-	Body    string       `json:"body,omitempty"`
-	Context *jsonContext  `json:"context,omitempty"`
-}
-
-func noteToJSON(n *note.Note) jsonNote {
-	j := jsonNote{
-		Title:  n.Title,
-		Date:   n.Date.Format("2006-01-02T15:04:05Z07:00"),
-		Labels: n.Labels,
-		Path:   n.Path,
-		Body:   n.Body,
-	}
-	if !n.Context.IsEmpty() {
-		j.Context = &jsonContext{
-			Project: n.Context.Project,
-			Branch:  n.Context.Branch,
-			Issue:   n.Context.Issue,
-			RepoDir: n.Context.RepoDir,
-			Commit:  n.Context.Commit,
-			Dirty:   n.Context.Dirty,
-			Files:   n.Context.Files,
-		}
-	}
-	return j
 }

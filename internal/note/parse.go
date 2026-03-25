@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/adrg/frontmatter"
-	devctx "github.com/igorsheg/nts/internal/context"
+	"github.com/igorsheg/nts/internal/gitctx"
 	"gopkg.in/yaml.v2"
 )
 
@@ -66,7 +66,7 @@ func Parse(path string) (*Note, error) {
 		Body:   strings.TrimSpace(string(body)),
 		Dir:    filepath.Dir(resolved),
 		Path:   resolved,
-		Context: devctx.Context{
+		Context: gitctx.Context{
 			Project: fm.Context.Project,
 			Branch:  fm.Context.Branch,
 			Issue:   fm.Context.Issue,

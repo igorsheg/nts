@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"os/exec"
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/editor"
+	"github.com/igorsheg/nts/internal/resolve"
 	"github.com/spf13/cobra"
 )
 
@@ -21,12 +24,16 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	path, err := resolveNotePathStrict(cfg.NotesDir, args[0])
+	path, err := resolve.Strict(cfg.NotesDir, args[0], config.MetaCachePath())
 	if err != nil {
 		return err
 	}
 
 	if err := editor.Open(cfg.ResolveEditor(), path); err != nil {
+		var execErr *exec.Error
+		if errors.As(err, &execErr) {
+			return fmt.Errorf("could not open editor %q — set $EDITOR or run: nts config --set editor=nvim", cfg.ResolveEditor())
+		}
 		return fmt.Errorf("opening editor: %w", err)
 	}
 

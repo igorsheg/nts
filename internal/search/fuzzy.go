@@ -2,6 +2,7 @@ package search
 
 import (
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/igorsheg/nts/internal/note"
@@ -57,11 +58,12 @@ func FuzzySearch(query string, notes []*note.Note) []*Result {
 		results = append(results, r)
 	}
 
-	for i := 1; i < len(results); i++ {
-		for j := i; j > 0 && results[j].Score > results[j-1].Score; j-- {
-			results[j], results[j-1] = results[j-1], results[j]
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].Score != results[j].Score {
+			return results[i].Score > results[j].Score
 		}
-	}
+		return results[i].Note.Path < results[j].Note.Path
+	})
 
 	return results
 }

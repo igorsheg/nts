@@ -9,6 +9,7 @@ import (
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
+	"github.com/igorsheg/nts/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -51,15 +52,15 @@ func runList(cmd *cobra.Command, args []string) error {
 	})
 
 	if len(listLabels) > 0 {
-		notes = filterByLabels(notes, listLabels)
+		notes = ui.FilterByLabels(notes, listLabels)
 	}
 
 	if listProject != "" {
-		notes = filterByProject(notes, listProject)
+		notes = ui.FilterByProject(notes, listProject)
 	}
 
 	if listSearch != "" {
-		notes = filterBySearch(notes, listSearch)
+		notes = ui.FilterBySearch(notes, listSearch)
 	}
 
 	if listLimit > 0 && len(notes) > listLimit {
@@ -67,9 +68,9 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	if listJSON {
-		out := make([]jsonNote, len(notes))
+		out := make([]ui.JSONNote, len(notes))
 		for i, n := range notes {
-			out[i] = noteToJSON(n)
+			out[i] = ui.NoteToJSON(n)
 		}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
@@ -95,45 +96,4 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func filterByLabels(notes []*note.Note, labels []string) []*note.Note {
-	labelSet := make(map[string]bool)
-	for _, l := range labels {
-		labelSet[strings.ToLower(strings.TrimSpace(l))] = true
-	}
-
-	var filtered []*note.Note
-	for _, n := range notes {
-		for _, nl := range n.Labels {
-			if labelSet[strings.ToLower(nl)] {
-				filtered = append(filtered, n)
-				break
-			}
-		}
-	}
-	return filtered
-}
-
-func filterByProject(notes []*note.Note, project string) []*note.Note {
-	p := strings.ToLower(project)
-	var filtered []*note.Note
-	for _, n := range notes {
-		if strings.ToLower(n.Context.Project) == p {
-			filtered = append(filtered, n)
-		}
-	}
-	return filtered
-}
-
-func filterBySearch(notes []*note.Note, query string) []*note.Note {
-	q := strings.ToLower(query)
-	var filtered []*note.Note
-	for _, n := range notes {
-		if strings.Contains(strings.ToLower(n.Title), q) ||
-			strings.Contains(strings.ToLower(n.Body), q) {
-			filtered = append(filtered, n)
-		}
-	}
-	return filtered
 }

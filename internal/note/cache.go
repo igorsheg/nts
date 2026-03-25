@@ -6,18 +6,19 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	devctx "github.com/igorsheg/nts/internal/context"
+	"github.com/igorsheg/nts/internal/gitctx"
 )
 
 type CachedMeta struct {
 	Title   string         `json:"title"`
 	Labels  []string       `json:"labels"`
 	Date    time.Time      `json:"date"`
-	Context devctx.Context `json:"context"`
+	Context gitctx.Context `json:"context"`
 	ModTime int64          `json:"mod_time"`
 }
 
@@ -164,6 +165,10 @@ func ParseAllCached(dir string, cachePath string) ([]*Note, error) {
 
 	_ = cache.Save()
 
+	sort.Slice(notes, func(i, j int) bool {
+		return notes[i].Path < notes[j].Path
+	})
+
 	return notes, nil
 }
 
@@ -185,7 +190,6 @@ func ParseBodyOnly(path string) (string, error) {
 				inFrontmatter = true
 				continue
 			}
-			// end of frontmatter — read the rest as body
 			for scanner.Scan() {
 				body.WriteString(scanner.Text())
 				body.WriteByte('\n')

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/igorsheg/nts/internal/config"
+	"github.com/igorsheg/nts/internal/resolve"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ func runAppend(cmd *cobra.Command, args []string) error {
 	}
 
 	query := args[0]
-	path, err := resolveNotePathStrict(cfg.NotesDir, query)
+	path, err := resolve.Strict(cfg.NotesDir, query, config.MetaCachePath())
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func runAppend(cmd *cobra.Command, args []string) error {
 
 	existing, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("reading note: %w", err)
+		return fmt.Errorf("could not read note: %s", path)
 	}
 
 	content := string(existing)
@@ -87,7 +88,7 @@ func resolveAppendText(args []string) (string, error) {
 		} else {
 			f, err := os.Open(appendBodyFile)
 			if err != nil {
-				return "", fmt.Errorf("opening body file: %w", err)
+				return "", fmt.Errorf("file not found: %s", appendBodyFile)
 			}
 			defer f.Close()
 			r = f

@@ -9,6 +9,7 @@ import (
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
 	"github.com/igorsheg/nts/internal/search"
+	"github.com/igorsheg/nts/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -49,18 +50,18 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(searchLabels) > 0 {
-		notes = filterByLabels(notes, searchLabels)
+		notes = ui.FilterByLabels(notes, searchLabels)
 	}
 
 	if searchProject != "" {
-		notes = filterByProject(notes, searchProject)
+		notes = ui.FilterByProject(notes, searchProject)
 	}
 
 	fuzzyResults := search.FuzzySearch(query, notes)
 
 	ix, err := search.OpenIndex(config.IndexPath())
 	if err != nil {
-		return fmt.Errorf("opening search index: %w", err)
+		return fmt.Errorf("search index corrupted — delete %s and retry", config.IndexPath())
 	}
 	defer ix.Close()
 

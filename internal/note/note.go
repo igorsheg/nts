@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	devctx "github.com/igorsheg/nts/internal/context"
+	"github.com/igorsheg/nts/internal/gitctx"
+	"gopkg.in/yaml.v2"
 )
 
 type Note struct {
@@ -18,7 +19,7 @@ type Note struct {
 	Body    string
 	Dir     string
 	Path    string
-	Context devctx.Context
+	Context gitctx.Context
 }
 
 func New(title string, labels []string, dir string) Note {
@@ -32,56 +33,49 @@ func New(title string, labels []string, dir string) Note {
 	return n
 }
 
+type frontmatterYAML struct {
+	Title   string       `yaml:"title"`
+	Date    string       `yaml:"date"`
+	Tags    []string     `yaml:"tags"`
+	Context *contextYAML `yaml:"context,omitempty"`
+}
+
+type contextYAML struct {
+	Project string   `yaml:"project,omitempty"`
+	Branch  string   `yaml:"branch,omitempty"`
+	Issue   string   `yaml:"issue,omitempty"`
+	RepoDir string   `yaml:"repo_dir,omitempty"`
+	Commit  string   `yaml:"commit,omitempty"`
+	Dirty   *bool    `yaml:"dirty,omitempty"`
+	Files   []string `yaml:"files,omitempty"`
+}
+
 func (n Note) Frontmatter() string {
 	title := n.Title
 	if title == "" {
 		title = "Untitled"
 	}
 
-	tags := "[]"
-	if len(n.Labels) > 0 {
-		quoted := make([]string, len(n.Labels))
-		for i, l := range n.Labels {
-			quoted[i] = l
-		}
-		tags = fmt.Sprintf("[%s]", strings.Join(quoted, ", "))
+	fm := frontmatterYAML{
+		Title: title,
+		Date:  n.Date.Format(time.RFC3339),
+		Tags:  n.Labels,
 	}
 
-	ctx := ""
 	if !n.Context.IsEmpty() {
-		ctx = "context:\n"
-		if n.Context.Project != "" {
-			ctx += fmt.Sprintf("  project: %s\n", n.Context.Project)
-		}
-		if n.Context.Branch != "" {
-			ctx += fmt.Sprintf("  branch: %s\n", n.Context.Branch)
-		}
-		if n.Context.Issue != "" {
-			ctx += fmt.Sprintf("  issue: %s\n", n.Context.Issue)
-		}
-		if n.Context.RepoDir != "" {
-			ctx += fmt.Sprintf("  repo_dir: %s\n", n.Context.RepoDir)
-		}
-		if n.Context.Commit != "" {
-			ctx += fmt.Sprintf("  commit: %s\n", n.Context.Commit)
-		}
-		if n.Context.Dirty != nil {
-			ctx += fmt.Sprintf("  dirty: %t\n", *n.Context.Dirty)
-		}
-		if len(n.Context.Files) > 0 {
-			ctx += "  files:\n"
-			for _, f := range n.Context.Files {
-				ctx += fmt.Sprintf("    - %s\n", f)
-			}
+		fm.Context = &contextYAML{
+			Project: n.Context.Project,
+			Branch:  n.Context.Branch,
+			Issue:   n.Context.Issue,
+			RepoDir: n.Context.RepoDir,
+			Commit:  n.Context.Commit,
+			Dirty:   n.Context.Dirty,
+			Files:   n.Context.Files,
 		}
 	}
 
-	return fmt.Sprintf(`---
-title: %q
-date: %s
-tags: %s
-%s---
-`, title, n.Date.Format(time.RFC3339), tags, ctx)
+	data, _ := yaml.Marshal(fm)
+	return "---\n" + string(data) + "---\n"
 }
 
 func (n Note) Filename() string {
