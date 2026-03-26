@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/glamour"
@@ -21,10 +22,14 @@ var (
 )
 
 var showCmd = &cobra.Command{
-	Use:   "show <path-or-slug>",
+	Use:   "show [slug]",
 	Short: "Show a note",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runShow,
+	Long: `Show a note's contents.
+
+With a slug, resolves and displays the note.
+Without a slug, opens an interactive picker (TTY only).`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runShow,
 }
 
 func init() {
@@ -38,10 +43,36 @@ func runShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	query := args[0]
-	path, err := resolve.Strict(cfg.NotesDir, query, config.MetaCachePath())
-	if err != nil {
-		return err
+	var path string
+
+	if len(args) > 0 {
+		path, err = resolve.Strict(cfg.NotesDir, args[0], config.MetaCachePath())
+		if err != nil {
+			return err
+		}
+	} else {
+		if !ui.IsTTY() {
+			return fmt.Errorf("slug required in non-interactive mode: nts show <slug>")
+		}
+		notes, err := note.ParseAllCached(cfg.NotesDir, config.MetaCachePath())
+		if err != nil {
+			return fmt.Errorf("reading notes: %w", err)
+		}
+		if len(notes) == 0 {
+			fmt.Println("no notes yet — create one with: nts \"My first note\"")
+			return nil
+		}
+		sort.Slice(notes, func(i, j int) bool {
+			return notes[i].Date.After(notes[j].Date)
+		})
+		result, err := ui.RunPicker(notes)
+		if err != nil {
+			return fmt.Errorf("picker: %w", err)
+		}
+		if result.Canceled {
+			return nil
+		}
+		path = result.Path
 	}
 
 	n, err := note.Parse(path)
