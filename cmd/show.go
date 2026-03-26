@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/glamour"
@@ -50,9 +50,12 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	if showJSON {
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(ui.NoteToJSON(n))
+		slug := strings.TrimSuffix(filepath.Base(path), ".md")
+		return ui.PrintEnvelope(ui.Success(
+			fmt.Sprintf("nts show %s", slug),
+			ui.NoteToJSON(n),
+			ui.NoteActions(slug),
+		))
 	}
 
 	if showRaw {

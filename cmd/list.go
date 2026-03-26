@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 
 	"github.com/igorsheg/nts/internal/config"
@@ -71,9 +69,10 @@ func runList(cmd *cobra.Command, args []string) error {
 		for i, n := range notes {
 			out[i] = ui.NoteToJSON(n)
 		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return ui.PrintEnvelope(ui.Success("nts list", map[string]interface{}{
+			"count": len(out),
+			"notes": out,
+		}, ui.ListActions()))
 	}
 
 	if len(notes) == 0 {

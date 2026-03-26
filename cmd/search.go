@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/igorsheg/nts/internal/config"
 	"github.com/igorsheg/nts/internal/note"
@@ -86,9 +84,14 @@ func runSearch(cmd *cobra.Command, args []string) error {
 				Score:  r.Score,
 			}
 		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return ui.PrintEnvelope(ui.Success(
+			fmt.Sprintf("nts search %q", query),
+			map[string]interface{}{
+				"count": len(out),
+				"items": out,
+			},
+			ui.SearchActions(query),
+		))
 	}
 
 	if len(merged) == 0 {

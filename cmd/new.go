@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -93,9 +92,12 @@ func runNew(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(ui.NoteToJSON(parsed))
+		slug := strings.TrimSuffix(filepath.Base(path), ".md")
+		return ui.PrintEnvelope(ui.Success(
+			fmt.Sprintf("nts new -t %q", parsed.Title),
+			ui.NoteToJSON(parsed),
+			ui.NoteActions(slug),
+		))
 	}
 
 	slug := filepath.Base(path)

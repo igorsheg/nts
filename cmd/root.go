@@ -29,6 +29,17 @@ Examples:
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
+			if newJSON {
+				return ui.PrintEnvelope(ui.CommandTree(Version, []ui.CommandInfo{
+					{Name: "new", Description: "Create a new note", Usage: "nts new -t <title> [-b <body>] [-l <labels>]"},
+					{Name: "list", Description: "List notes", Usage: "nts list [--labels <labels>] [--project <project>] [--json]"},
+					{Name: "show", Description: "Show a note", Usage: "nts show <slug> [--json] [--raw]"},
+					{Name: "search", Description: "Search notes", Usage: "nts search <query> [--json] [--labels <labels>]"},
+					{Name: "edit", Description: "Edit a note", Usage: "nts edit [slug]"},
+					{Name: "append", Description: "Append to a note", Usage: "nts append <slug> <text>"},
+					{Name: "config", Description: "Show or modify config", Usage: "nts config [--get <key>] [--set <key=value>]"},
+				}))
+			}
 			return cmd.Help()
 		}
 		return runNew(cmd, args)
