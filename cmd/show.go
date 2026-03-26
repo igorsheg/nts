@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,9 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
+
+//go:embed mdstyle.json
+var defaultMDStyle []byte
 
 var (
 	showJSON bool
@@ -133,8 +137,15 @@ func renderPretty(n *note.Note) error {
 		width = w
 	}
 
+	var styleOpt glamour.TermRendererOption
+	if os.Getenv("GLAMOUR_STYLE") != "" {
+		styleOpt = glamour.WithEnvironmentConfig()
+	} else {
+		styleOpt = glamour.WithStylesFromJSONBytes(defaultMDStyle)
+	}
+
 	renderer, err := glamour.NewTermRenderer(
-		glamour.WithEnvironmentConfig(),
+		styleOpt,
 		glamour.WithWordWrap(width),
 	)
 	if err != nil {
