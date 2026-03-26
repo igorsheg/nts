@@ -4,15 +4,13 @@
 ┘└┘ ┴ └─┘
 ```
 
-Quick markdown notes from your terminal.
+Quick markdown notes from your terminal. Zero friction, zero setup.
 
 ```
-nts "OAuth tokens expire after 1hr not 2hr"
+nts "OAuth tokens expire after 1hr not 2hr" -l work,auth -b "the IdP changed defaults"
 ```
 
-That's it. A markdown file is created with frontmatter, your `$EDITOR` opens, and the note is saved to `~/nts/`. If you pass `-b`, the editor is skipped entirely.
-
-Notes are plain `.md` files. No database, no sync, no lock-in. Move them to Obsidian, Hugo, or `grep` them — they're yours.
+A markdown file is created with frontmatter, tagged, and saved to `~/nts/`. If you skip `-b`, your `$EDITOR` opens. Notes are plain `.md` files — move them to Obsidian, Hugo, or `grep` them.
 
 ## Install
 
@@ -23,111 +21,93 @@ npm install -g @igorsheg/nts
 Or build from source:
 
 ```
-git clone https://github.com/igorsheg/nts
-cd nts && make install
+git clone https://github.com/igorsheg/nts && cd nts && make install
 ```
 
-## Usage
+## What makes it different
 
-```
-nts "Title of my note"                  # create, open editor
-nts "Fix auth bug" -l work -b "..."     # create with body, skip editor
-nts list                                # list notes
-nts list -l work                        # filter by label
-nts search "oauth token"                # fuzzy + full-text search
-nts show oauth                          # show a note
-nts edit oauth                          # re-open in editor
-nts append oauth "new finding"          # add to existing note
-echo "piped" | nts new -t "Title"       # stdin
-nts list --json                         # structured output
-```
+**Auto-context.** Create a note inside a git repo and nts captures where you are — project, branch, commit, even the files you're touching:
 
-## Query resolution
-
-Every command takes a query. Resolution is deterministic:
-
-```
-exact slug      →  matches
-single fuzzy    →  matches
-multiple fuzzy  →  fails, shows candidates
+```yaml
+context:
+  project: auth-service
+  branch: fix/PROJ-123-oauth-refresh
+  issue: PROJ-123
+  commit: a1b2c3d
+  dirty: true
+  files:
+    - src/auth/token.go
 ```
 
-Writes (`edit`, `append`) never silently pick the wrong note.
+Weeks later: `nts list -p auth-service` shows everything you learned in that repo.
+
+**Fuzzy everything.** Every command takes a query. Type enough to be unique:
 
 ```
-$ nts append redis "update"
+nts show redis                → shows Redis Caching Strategy
+nts edit lars                 → opens 1:1 with Lars in $EDITOR
+nts append standup "update"   → appends to today's standup
+```
+
+Ambiguous? It tells you:
+
+```
 error: ambiguous match for "redis", found 2 notes:
   redis-caching-strategy    Redis Caching Strategy
   redis-monitoring-setup    Redis Monitoring Setup
 use the full slug to be specific
 ```
 
-## Auto-context
-
-When you create a note inside a git repo, nts captures the project, branch, and directory automatically:
-
-```yaml
----
-title: "OAuth tokens expire after 1hr"
-date: 2026-03-25T14:30:00+02:00
-tags: [work, auth]
-context:
-  project: auth-service
-  branch: fix/oauth
-  directory: ~/work/auth-service/src
----
-```
-
-Filter by project later:
+**Interactive picker.** `nts show` or `nts edit` with no args opens an inline fuzzy finder:
 
 ```
-nts list -p auth-service
-nts search "token" -p auth-service
+> red
+▸ redis-caching-strategy  Redis Caching Strategy  [tech, redis]
+  1/21
 ```
 
-## Frontmatter
+**Agent-native.** Every command supports `--json` with HATEOAS envelopes — agents get structured output with next actions:
 
-Standard YAML frontmatter. Compatible with Jekyll, Hugo, Obsidian, Astro, Zola.
-
-```yaml
----
-title: "My Note"
-date: 2026-03-25T14:30:00+02:00
-tags: [work, meeting]
-context:
-  project: my-project
-  branch: main
-  directory: ~/work/my-project
----
+```json
+{
+  "ok": true,
+  "command": "nts new -t \"OAuth fix\"",
+  "result": { "title": "OAuth fix", "path": "/Users/you/nts/oauth-fix.md" },
+  "next_actions": [
+    { "command": "nts show oauth-fix", "description": "Show this note" },
+    { "command": "nts append oauth-fix <text>", "description": "Append to this note" }
+  ]
+}
 ```
 
-## For scripts and agents
+## Commands
+
+Run `nts --help` for the full reference, or `nts <command> --help` for any subcommand.
+
+```
+nts "Title"              create a note (shorthand for nts new)
+nts list                 list notes
+nts show <slug>          show a note (glamour-rendered in TTY)
+nts search <query>       fuzzy + full-text search
+nts edit <slug>          re-open in $EDITOR
+nts append <slug> "text" add to an existing note
+nts config               show/modify configuration
+```
+
+## Shell completions
 
 ```bash
-# create and get the slug back
-SLUG=$(nts new -t "Finding" -b "details" --json | jq -r '.path' | xargs basename | sed 's/.md//')
+# zsh
+echo 'source <(nts completion zsh)' >> ~/.zshrc
 
-# read it back
-nts show "$SLUG" --json
+# bash
+echo 'source <(nts completion bash)' >> ~/.bashrc
 
-# append to it
-nts append "$SLUG" "new info"
-
-# list as JSON
-nts list --json | jq '.[] | select(.labels | index("work"))'
+# fish
+nts completion fish > ~/.config/fish/completions/nts.fish
 ```
 
-## Config
-
-Stored at `~/.config/nts/config.json`.
-
-```
-nts config                          # show config
-nts config --set notes_dir=~/notes  # change notes directory
-nts config --set editor=nvim        # change editor
-```
-
-Falls back to `$EDITOR`, then `vi`.
+Tab-completes note slugs with titles as descriptions.
 
 ## License
 
