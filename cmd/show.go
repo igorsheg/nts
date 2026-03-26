@@ -134,7 +134,7 @@ func renderPretty(n *note.Note) error {
 	}
 
 	renderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
+		glamour.WithEnvironmentConfig(),
 		glamour.WithWordWrap(width),
 	)
 	if err != nil {
