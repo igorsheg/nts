@@ -86,14 +86,14 @@ func (m pickerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected = m.filtered[m.cursor].note.Path
 			}
 			return m, tea.Quit
-		case "up", "ctrl+p":
+		case "up", "ctrl+p", "ctrl+k":
 			if m.cursor > 0 {
 				m.cursor--
 				if m.cursor < m.offset {
 					m.offset = m.cursor
 				}
 			}
-		case "down", "ctrl+n":
+		case "down", "ctrl+n", "ctrl+j":
 			if m.cursor < len(m.filtered)-1 {
 				m.cursor++
 				if m.cursor >= m.offset+maxVisible {
