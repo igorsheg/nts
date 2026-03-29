@@ -18,7 +18,7 @@ A markdown file is created with frontmatter, tagged, and saved to `~/nts/`. If y
 npm install -g @igorsheg/nts
 ```
 
-Or build from source:
+Or build from source (requires [Zig](https://ziglang.org/) 0.14+):
 
 ```
 git clone https://github.com/igorsheg/nts && cd nts && make install

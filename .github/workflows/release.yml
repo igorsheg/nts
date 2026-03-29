@@ -9,35 +9,97 @@ permissions:
   contents: write
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-macos
+            npm_pkg: nts-darwin-arm64
+          - target: x86_64-macos
+            npm_pkg: nts-darwin-x64
+          - target: aarch64-linux
+            npm_pkg: nts-linux-arm64
+          - target: x86_64-linux
+            npm_pkg: nts-linux-x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.0
+
+      - name: Build
+        run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
+
+      - name: Package
+        run: |
+          mkdir -p staging
+          cp zig-out/bin/nts staging/nts
+          tar -czf nts_${{ matrix.npm_pkg }}.tar.gz -C staging nts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.npm_pkg }}
+          path: nts_${{ matrix.npm_pkg }}.tar.gz
+
   release:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/download-artifact@v4
         with:
-          go-version: "1.22"
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.tar.gz
+          generate_release_notes: true
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+      - uses: actions/download-artifact@v4
         with:
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts
 
-      - name: Publish to npm
-        uses: evg4b/goreleaser-npm-publisher-action@v1
-        with:
-          prefix: "@igorsheg"
-          token: ${{ secrets.NPM_TOKEN }}
-          description: "Note to self — quick markdown notes from your terminal"
-          keywords: "cli,notes,markdown,terminal"
-          license: "MIT"
+      - name: Stage platform binaries
+        run: |
+          for pkg in nts-darwin-arm64 nts-darwin-x64 nts-linux-arm64 nts-linux-x64; do
+            mkdir -p npm/$pkg/bin
+            tar -xzf artifacts/$pkg/nts_$pkg.tar.gz -C npm/$pkg/bin
+            chmod +x npm/$pkg/bin/nts
+          done
+
+      - name: Set version from tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          for dir in npm/nts npm/nts-darwin-arm64 npm/nts-darwin-x64 npm/nts-linux-arm64 npm/nts-linux-x64; do
+            cd $dir
+            npm version $VERSION --no-git-tag-version --allow-same-version
+            cd $GITHUB_WORKSPACE
+          done
+
+      - name: Publish platform packages
+        run: |
+          for pkg in nts-darwin-arm64 nts-darwin-x64 nts-linux-arm64 nts-linux-x64; do
+            cd npm/$pkg && npm publish --access public && cd $GITHUB_WORKSPACE
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish root package
+        run: cd npm/nts && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,15 @@
+{
+  "name": "@igorsheg/nts",
+  "version": "0.4.0",
+  "description": "Note to self — quick markdown notes from your terminal",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/igorsheg/nts" },
+  "keywords": ["cli", "notes", "markdown", "terminal"],
+  "bin": { "nts": "index.js" },
+  "optionalDependencies": {
+    "@igorsheg/nts-darwin-arm64": "0.4.0",
+    "@igorsheg/nts-darwin-x64": "0.4.0",
+    "@igorsheg/nts-linux-arm64": "0.4.0",
+    "@igorsheg/nts-linux-x64": "0.4.0"
+  }
+}

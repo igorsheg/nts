@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NTS="./nts"
+NTS="${NTS:-./zig-out/bin/nts}"
 
 echo "=== seeding nts corpus ==="
 

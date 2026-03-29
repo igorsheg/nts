@@ -1,3 +1,5 @@
-nts
-nts-*
+zig-out/
+.zig-cache/
 dist/
+npm/nts-*/bin/
+*.o

@@ -1,0 +1,10 @@
+{
+  "name": "@igorsheg/nts-darwin-x64",
+  "version": "0.4.0",
+  "description": "nts binary for macOS x64",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/igorsheg/nts" },
+  "os": ["darwin"],
+  "cpu": ["x64"],
+  "files": ["bin/nts"]
+}
