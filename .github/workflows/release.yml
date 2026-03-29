@@ -74,22 +74,16 @@ jobs:
         with:
           path: artifacts
 
-      - name: Stage platform binaries
+      - name: Prepare dist
         run: |
+          mkdir -p dist
           for pkg in nts-darwin-arm64 nts-darwin-x64 nts-linux-arm64 nts-linux-x64; do
-            mkdir -p npm/$pkg/bin
-            tar -xzf artifacts/$pkg/nts_$pkg.tar.gz -C npm/$pkg/bin
-            chmod +x npm/$pkg/bin/nts
+            tar -xzf artifacts/$pkg/nts_$pkg.tar.gz -C dist
+            mv dist/nts dist/$pkg
           done
 
-      - name: Set version from tag
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          for dir in npm/nts npm/nts-darwin-arm64 npm/nts-darwin-x64 npm/nts-linux-arm64 npm/nts-linux-x64; do
-            cd $dir
-            npm version $VERSION --no-git-tag-version --allow-same-version
-            cd $GITHUB_WORKSPACE
-          done
+      - name: Generate npm packages
+        run: ./scripts/npm-stage.sh ${GITHUB_REF#refs/tags/v}
 
       - name: Publish platform packages
         run: |

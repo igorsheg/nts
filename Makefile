@@ -13,29 +13,22 @@ cross: dist/nts-darwin-arm64 dist/nts-darwin-x64 dist/nts-linux-arm64 dist/nts-l
 
 dist/nts-darwin-arm64:
 	zig build -Doptimize=ReleaseSafe -Dtarget=aarch64-macos
-	mkdir -p dist
-	cp zig-out/bin/nts dist/nts-darwin-arm64
+	mkdir -p dist && cp zig-out/bin/nts dist/nts-darwin-arm64
 
 dist/nts-darwin-x64:
 	zig build -Doptimize=ReleaseSafe -Dtarget=x86_64-macos
-	mkdir -p dist
-	cp zig-out/bin/nts dist/nts-darwin-x64
+	mkdir -p dist && cp zig-out/bin/nts dist/nts-darwin-x64
 
 dist/nts-linux-arm64:
 	zig build -Doptimize=ReleaseSafe -Dtarget=aarch64-linux
-	mkdir -p dist
-	cp zig-out/bin/nts dist/nts-linux-arm64
+	mkdir -p dist && cp zig-out/bin/nts dist/nts-linux-arm64
 
 dist/nts-linux-x64:
 	zig build -Doptimize=ReleaseSafe -Dtarget=x86_64-linux
-	mkdir -p dist
-	cp zig-out/bin/nts dist/nts-linux-x64
+	mkdir -p dist && cp zig-out/bin/nts dist/nts-linux-x64
 
 npm-stage: cross
-	mkdir -p npm/nts-darwin-arm64/bin && cp dist/nts-darwin-arm64 npm/nts-darwin-arm64/bin/nts
-	mkdir -p npm/nts-darwin-x64/bin   && cp dist/nts-darwin-x64   npm/nts-darwin-x64/bin/nts
-	mkdir -p npm/nts-linux-arm64/bin  && cp dist/nts-linux-arm64  npm/nts-linux-arm64/bin/nts
-	mkdir -p npm/nts-linux-x64/bin    && cp dist/nts-linux-x64    npm/nts-linux-x64/bin/nts
+	./scripts/npm-stage.sh $(VERSION)
 
 npm-publish: npm-stage
 	cd npm/nts-darwin-arm64 && npm publish --access public
@@ -45,6 +38,6 @@ npm-publish: npm-stage
 	cd npm/nts              && npm publish --access public
 
 clean:
-	rm -rf zig-out .zig-cache dist npm/nts-*/bin
+	rm -rf zig-out .zig-cache dist npm
 
 .PHONY: build release install cross npm-stage npm-publish clean
