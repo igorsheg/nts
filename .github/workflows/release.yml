@@ -11,17 +11,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - target: aarch64-macos
-            npm_pkg: nts-darwin-arm64
-          - target: x86_64-macos
-            npm_pkg: nts-darwin-x64
-          - target: aarch64-linux
-            npm_pkg: nts-linux-arm64
-          - target: x86_64-linux
-            npm_pkg: nts-linux-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -29,19 +18,26 @@ jobs:
         with:
           version: 0.14.0
 
-      - name: Build
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
-
-      - name: Package
+      - name: Cross-compile all targets
         run: |
-          mkdir -p staging
-          cp zig-out/bin/nts staging/nts
-          tar -czf nts_${{ matrix.npm_pkg }}.tar.gz -C staging nts
+          mkdir -p dist
+          for pair in "aarch64-macos:nts-darwin-arm64" "x86_64-macos:nts-darwin-x64" "aarch64-linux:nts-linux-arm64" "x86_64-linux:nts-linux-x64"; do
+            IFS=: read -r target name <<< "$pair"
+            zig build -Doptimize=ReleaseSafe -Dtarget=$target
+            cp zig-out/bin/nts dist/$name
+          done
+
+      - name: Package archives
+        run: |
+          cd dist
+          for bin in nts-*; do
+            tar -czf ${bin}.tar.gz $bin
+          done
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.npm_pkg }}
-          path: nts_${{ matrix.npm_pkg }}.tar.gz
+          name: binaries
+          path: dist/*.tar.gz
 
   release:
     needs: build
@@ -51,12 +47,13 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: binaries
+          path: dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*.tar.gz
+          files: dist/*.tar.gz
           generate_release_notes: true
 
   publish-npm:
@@ -72,28 +69,20 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: binaries
+          path: dist
 
-      - name: Prepare dist
+      - name: Extract binaries
         run: |
-          mkdir -p dist
-          for pkg in nts-darwin-arm64 nts-darwin-x64 nts-linux-arm64 nts-linux-x64; do
-            tar -xzf artifacts/$pkg/nts_$pkg.tar.gz -C dist
-            mv dist/nts dist/$pkg
-          done
+          cd dist
+          for f in *.tar.gz; do tar -xzf "$f"; done
 
-      - name: Generate npm packages
-        run: ./scripts/npm-stage.sh ${GITHUB_REF#refs/tags/v}
-
-      - name: Publish platform packages
+      - name: Generate and publish npm packages
         run: |
+          ./scripts/npm-stage.sh ${GITHUB_REF#refs/tags/v}
           for pkg in nts-darwin-arm64 nts-darwin-x64 nts-linux-arm64 nts-linux-x64; do
             cd npm/$pkg && npm publish --access public && cd $GITHUB_WORKSPACE
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish root package
-        run: cd npm/nts && npm publish --access public
+          cd npm/nts && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
