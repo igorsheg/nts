@@ -82,16 +82,17 @@ use the full slug to be specific
 
 ## Commands
 
-Run `nts --help` for the full reference, or `nts <command> --help` for any subcommand.
+Run `nts --help` for the full reference.
 
 ```
-nts "Title"              create a note (shorthand for nts new)
-nts list                 list notes
-nts show <slug>          show a note (glamour-rendered in TTY)
-nts search <query>       fuzzy + full-text search
-nts edit <slug>          re-open in $EDITOR
-nts append <slug> "text" add to an existing note
-nts config               show/modify configuration
+nts "Title"                create a note (shorthand for nts new)
+nts list                   list notes (alias: nts ls)
+nts show [slug]            show a note (ANSI-formatted in TTY, --raw for plain markdown)
+nts search <query>         fuzzy + full-text search
+nts edit [slug]            re-open in $EDITOR
+nts append <slug> "text"   add to an existing note
+nts config                 show/modify configuration
+nts completion <shell>     shell completions (bash, zsh, fish)
 ```
 
 ## Shell completions
