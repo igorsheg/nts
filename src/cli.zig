@@ -852,7 +852,7 @@ const help_text =
     \\nts — note to self
     \\
     \\Usage:
-    \\  nts [title]              create a note
+    \\  nts [title]              create a note (shorthand for nts new)
     \\  nts new [title]          create a note
     \\  nts list                 list notes
     \\  nts show [slug]          show a note
@@ -860,11 +860,62 @@ const help_text =
     \\  nts edit [slug]          edit a note
     \\  nts append <slug> <text> append to a note
     \\  nts config               show/modify config
-    \\  nts completion <shell>   shell completions
+    \\  nts completion <shell>   shell completions (bash, zsh, fish)
     \\
     \\Flags:
-    \\  -h, --help      show help
-    \\  -v, --version   show version
-    \\  --json          JSON output
+    \\  -h, --help               show help
+    \\  -v, --version            show version
+    \\  --json                   JSON output with HATEOAS envelopes
+    \\
+    \\New:
+    \\  nts new [title] [flags]
+    \\  -t, --title <title>      note title
+    \\  -l, --labels <a,b>       comma-separated labels
+    \\  -b, --body <text>        note body (inline)
+    \\  -F, --body-file <path>   read body from file (use - for stdin)
+    \\  -e, --editor             force open $EDITOR even with -b
+    \\  --json                   output as JSON
+    \\
+    \\List:
+    \\  nts list [flags]         (alias: nts ls)
+    \\  -l, --labels <a,b>       filter by labels
+    \\  -n, --limit <n>          max notes to show (default: 20)
+    \\  -S, --search <query>     filter by text match
+    \\  -p, --project <name>     filter by git project context
+    \\  --json                   output as JSON
+    \\
+    \\Show:
+    \\  nts show [slug] [flags]  (interactive picker if no slug)
+    \\  --raw                    print raw markdown (no formatting)
+    \\  --json                   output as JSON
+    \\
+    \\Search:
+    \\  nts search <query> [flags]
+    \\  -l, --labels <a,b>       filter by labels
+    \\  -n, --limit <n>          max results (default: 10)
+    \\  -p, --project <name>     filter by git project context
+    \\  --json                   output as JSON
+    \\
+    \\Edit:
+    \\  nts edit [slug]          (interactive picker if no slug)
+    \\
+    \\Append:
+    \\  nts append <slug> <text>
+    \\  -F, --body-file <path>   read text from file (use - for stdin)
+    \\
+    \\Config:
+    \\  nts config               show current config as JSON
+    \\  --get <key>              get a config value (notes_dir, editor)
+    \\  --set <key=value>        set a config value
+    \\
+    \\Examples:
+    \\  nts "quick thought"                    create with title, open editor
+    \\  nts new -t "Bug" -l work -b "details"  create inline, no editor
+    \\  echo "piped" | nts new -t "From stdin"  pipe body from stdin
+    \\  nts list -l work -n 5                  last 5 work notes
+    \\  nts show redis                         fuzzy-match slug
+    \\  nts search "oauth" -p auth-service     search within a project
+    \\  nts append standup "shipped the fix"   append text to a note
+    \\  nts config --set editor=nvim           change editor
     \\
 ;
