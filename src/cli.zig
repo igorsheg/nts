@@ -29,6 +29,10 @@ pub fn run(allocator: std.mem.Allocator) !void {
     if (eql(cmd, "append")) return cmdAppend(allocator, args[2..]);
     if (eql(cmd, "config")) return cmdConfig(allocator, args[2..]);
     if (eql(cmd, "completion")) return cmdCompletion(args[2..]);
+    if (eql(cmd, "version")) {
+        showVersion();
+        return;
+    }
     if (eql(cmd, "--help") or eql(cmd, "-h")) {
         showHelp();
         return;
@@ -861,6 +865,7 @@ const help_text =
     \\  nts append <slug> <text> append to a note
     \\  nts config               show/modify config
     \\  nts completion <shell>   shell completions (bash, zsh, fish)
+    \\  nts version              show version
     \\
     \\Flags:
     \\  -h, --help               show help
